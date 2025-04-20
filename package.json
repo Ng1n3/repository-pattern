@@ -1,0 +1,33 @@
+{
+  "name": "repository-pattern",
+  "version": "1.0.0",
+  "description": "A sample code for demonstration of the repository pattern in Node.js",
+  "main": "main.ts",
+  "scripts": {
+    "dev": "nodemon --watch src --exec ts-node src/main.ts",
+    "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create src/migrations/seedUsers",
+    "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate src/migrations/InitialSchema -d src/data-source.ts",
+    "migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
+    "migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
+    "migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.8.1",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mysql": "^2.18.1",
+    "reflect-metadata": "^0.2.2",
+    "ts-node": "^10.9.2",
+    "typeorm": "^0.3.22",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "nodemon": "^3.1.9"
+  }
+}
