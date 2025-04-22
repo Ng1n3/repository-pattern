@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../data-source';
 import { UpdateUserDto, User } from '../entity/User';
+import { TestDataSource } from '../test-data-source';
 
 export interface IUserRepository {
   create(userData: User): Promise<User>;
@@ -15,7 +16,9 @@ export class UserRepository implements IUserRepository {
   private ormRepository: Repository<User>;
 
   constructor() {
-    this.ormRepository = AppDataSource.getRepository(User);
+    const dataSource =
+      process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource;
+    this.ormRepository = dataSource.getRepository(User);
   }
 
   async create(user: User): Promise<User> {
