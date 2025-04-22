@@ -1,9 +1,9 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../data-source';
-import { CreateUserDto, UpdateUserDto, User } from '../entity/User';
+import { UpdateUserDto, User } from '../entity/User';
 
 export interface IUserRepository {
-  create(userData: CreateUserDto): Promise<User>;
+  create(userData: User): Promise<User>;
   update(id: string, userData: UpdateUserDto): Promise<User>;
   findAll(): Promise<User[]>;
   findById(id: string): Promise<User | null>;
@@ -18,8 +18,7 @@ export class UserRepository implements IUserRepository {
     this.ormRepository = AppDataSource.getRepository(User);
   }
 
-  async create(userData: CreateUserDto): Promise<User> {
-    const user = this.ormRepository.create(userData);
+  async create(user: User): Promise<User> {
     return this.ormRepository.save(user);
   }
 

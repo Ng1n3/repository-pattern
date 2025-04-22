@@ -9,7 +9,14 @@ export class UserService {
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
-    return this.userRepository.create(userData);
+
+    const user = await User.create(
+      userData.name,
+      userData.email,
+      userData.password
+    );
+
+    return this.userRepository.create(user);
   }
 
   async findAll(): Promise<User[]> {
