@@ -1,4 +1,4 @@
-import { User } from '../entity/User';
+import { NewUser, users } from '../entity/User';
 import { TestDataSource } from '../test-data-source';
 import { UserRepository } from './user.repository';
 
@@ -6,29 +6,30 @@ describe('UserRepository', () => {
   let repository: UserRepository;
 
   beforeAll(async () => {
-    await TestDataSource.initialize();
     repository = new UserRepository();
   });
 
   afterAll(async () => {
-    await TestDataSource.destroy();
+    await TestDataSource.delete(users);
   });
 
   beforeEach(async () => {
     // Clear data between tests
-    await TestDataSource.getRepository(User).clear();
+    await TestDataSource.delete(users);
   });
 
   it('should create and find users', async () => {
-    const user = new User();
+    const userData: NewUser = {
+      name: 'Test',
+      email: 'test@test.com',
+      password: 'hashed_password',
+    };
 
-    user.name = 'Test';
-    user.email = 'test@test.com';
-    user.password = 'hashed_password';
-    user.comparePassword = async () => true;
-
-    const createdUser = await repository.create(user);
+    const createdUser = await repository.create(userData);
     const found = await repository.findById(createdUser.id);
-    expect(found?.email).toBe(user.email);
+    
+    expect(found).toBeTruthy();
+    expect(found?.email).toBe(userData.email);
+    expect(found?.name).toBe(userData.name);
   });
 });

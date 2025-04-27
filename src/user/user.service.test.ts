@@ -8,6 +8,15 @@ const validUserData = {
   password: 'securePassword123!',
 };
 
+const mockUser: User = {
+  id: '123',
+  name: 'Test User',
+  email: 'test@example.com',
+  password: 'hashed_password',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 const mockRepo: jest.Mocked<IUserRepository> = {
   findByEmail: jest.fn(),
   create: jest.fn(),
@@ -28,7 +37,7 @@ describe('UserService', () => {
   describe('create()', () => {
     it('should reject duplicate emails', async () => {
       // Arrange
-      mockRepo.findByEmail.mockResolvedValue(new User());
+      mockRepo.findByEmail.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(service.create(validUserData)).rejects.toThrow(
@@ -41,15 +50,6 @@ describe('UserService', () => {
 
     it('should create new users with valid data', async () => {
       // Arrange
-      const mockUser = new User();
-      Object.assign(mockUser, {
-        id: '123',
-        ...validUserData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      mockUser.comparePassword = jest.fn();
-
       mockRepo.findByEmail.mockResolvedValue(null);
       mockRepo.create.mockResolvedValue(mockUser);
 
@@ -58,13 +58,17 @@ describe('UserService', () => {
 
       // Assert
       expect(result).toEqual(mockUser);
-      expect(mockRepo.create).toHaveBeenCalled();
+      expect(mockRepo.create).toHaveBeenCalledWith({
+        name: validUserData.name,
+        email: validUserData.email,
+        password: expect.stringMatching(/^\$2[ayb]\$.{56}$/) // Hashed password
+      });
     });
 
     it('should hash passwords before saving', async () => {
       // Arrange
       mockRepo.findByEmail.mockResolvedValue(null);
-      mockRepo.create.mockImplementation(async (user) => user);
+      mockRepo.create.mockResolvedValue(mockUser);
 
       // Act
       await service.create(validUserData);
@@ -75,5 +79,4 @@ describe('UserService', () => {
       expect(savedUser.password).toMatch(/^\$2[ayb]\$.{56}$/); // bcrypt pattern
     });
   });
-
 });

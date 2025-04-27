@@ -1,10 +1,11 @@
-import { Repository } from 'typeorm';
-import { AppDataSource } from '../data-source';
-import { UpdateUserDto, User } from '../entity/User';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { AppDataSource } from '../../drizzle.config';
+import { NewUser, UpdateUserDto, User, users } from '../entity/User';
 import { TestDataSource } from '../test-data-source';
 
 export interface IUserRepository {
-  create(userData: User): Promise<User>;
+  create(userData: NewUser): Promise<User>;
   update(id: string, userData: UpdateUserDto): Promise<User>;
   findAll(): Promise<User[]>;
   findById(id: string): Promise<User | null>;
@@ -13,38 +14,54 @@ export interface IUserRepository {
 }
 
 export class UserRepository implements IUserRepository {
-  private ormRepository: Repository<User>;
+  private ormRepository: ReturnType<typeof drizzle>;
 
   constructor() {
-    const dataSource =
+    this.ormRepository =
       process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource;
-    this.ormRepository = dataSource.getRepository(User);
   }
 
-  async create(user: User): Promise<User> {
-    return this.ormRepository.save(user);
+  async create(user: NewUser): Promise<User> {
+    const [createduser] = await this.ormRepository
+      .insert(users)
+      .values(user)
+      .returning();
+    return createduser;
   }
 
   async update(id: string, userData: UpdateUserDto): Promise<User> {
-    await this.ormRepository.update(id, userData);
-    const updatedUser = await this.findById(id);
-    if (!updatedUser) throw new Error('User not found after update');
+    const [updatedUser] = await this.ormRepository
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+
     return updatedUser;
   }
 
   async findAll(): Promise<User[]> {
-    return this.ormRepository.find();
+    return this.ormRepository.select().from(users);
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.ormRepository.findOneBy({ id });
+    const [user] = await this.ormRepository
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return user || null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.ormRepository.findOneBy({ email });
+    const [user] = await this.ormRepository
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    return user || null;
   }
 
   async delete(id: string): Promise<void> {
-    await this.ormRepository.delete(id);
+    await this.ormRepository.delete(users).where(eq(users.id, id));
   }
 }
