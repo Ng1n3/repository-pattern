@@ -1,18 +1,17 @@
-import { CreateUserDto, UpdateUserDto, User } from '../entity/User';
+import * as bcrypt from 'bcryptjs';
+import { CreateUserDto, IUser, UpdateUserDto } from '../entity/User';
 import { IUserRepository } from '../repos/user.repository';
-import * as bcrypt from 'bcryptjs'
 
 export class UserService {
   constructor(private userRepository: IUserRepository) {}
 
-  async create(userData: CreateUserDto): Promise<User> {
-
+  async create(userData: CreateUserDto): Promise<IUser> {
     if (!this.validateEmail(userData.email)) {
-      throw new Error("Invalid email format");
+      throw new Error('Invalid email format');
     }
 
     if (userData.password.length < 8) {
-      throw new Error("Password must be at least 8 characters long")
+      throw new Error('Password must be at least 8 characters long');
     }
 
     const existingUser = await this.userRepository.findByEmail(userData.email);
@@ -22,21 +21,20 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
 
-  
-       const user = new User();
-       user.name = userData.name;
-       user.email = userData.email;
-       user.password = hashedPassword;
-   
+    const user = {
+      name: userData.name,
+      email: userData.email,
+      password: hashedPassword,
+    };
 
-       return this.userRepository.create(user);
+    return this.userRepository.create(user);
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<IUser[]> {
     return this.userRepository.findAll();
   }
 
-  async findById(id: string): Promise<User> {
+  async findById(id: string): Promise<IUser> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new Error('User not found');
@@ -44,7 +42,7 @@ export class UserService {
     return user;
   }
 
-  async update(id: string, userData: UpdateUserDto): Promise<User | null> {
+  async update(id: string, userData: UpdateUserDto): Promise<IUser | null> {
     return this.userRepository.update(id, userData);
   }
 
@@ -52,10 +50,10 @@ export class UserService {
     await this.userRepository.delete(id);
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(email: string, password: string): Promise<IUser | null> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) return null;
-    
+
     const isValid = await bcrypt.compare(password, user.password);
     return isValid ? user : null;
   }

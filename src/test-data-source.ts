@@ -1,15 +1,32 @@
-import { DataSource } from 'typeorm';
-import { User } from './entity/User';
+import * as dotenv from 'dotenv';
+import mongoose from 'mongoose';
+dotenv.config();
 
-export const TestDataSource = new DataSource({
-  type: 'mysql',
-  host: process.env.TEST_DB_HOST,
-  port: parseInt(process.env.DB_PORT || '3306'),
-  username: process.env.DB_USERNAME || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'your_database',
-  synchronize: true,
-  dropSchema: true, // Clean DB between test suites
-  entities: [User],
-  logging: false,
+const TEST_DB_URI = process.env.TEST_DB_URI || 'mongodb://localhost:27017/userz-test';
+
+// Export connection functions with TypeORM-like interface for tests
+export const testConnectMongoDB = {
+  initialize: async () => {
+    await mongoose.connect(TEST_DB_URI);
+    console.log('Test MongoDB connected successfully');
+  },
+  
+  destroy: async () => {
+    await mongoose.connection.close();
+    console.log('Test MongoDB connection closed');
+  },
+  
+  getRepository: (model: any) => {
+    return {
+      clear: async () => {
+        await model.deleteMany({});
+      }
+    };
+  }
+};
+
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('MongoDB connection closed');
+  process.exit(0);
 });

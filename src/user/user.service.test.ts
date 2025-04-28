@@ -1,7 +1,37 @@
-import { User } from '../entity/User';
+import { Types } from 'mongoose';
+import { IUser, UserProps } from '../entity/User';
 import { IUserRepository } from '../repos/user.repository';
 import { UserService } from './user.service';
-import * as bcrypt from 'bcryptjs'
+import * as bcrypt from 'bcryptjs';
+
+// Create a mock user with just the properties we need for testing
+export function createMockUser(overrides: Partial<UserProps> = {}): IUser {
+  const user: UserProps & { _id: Types.ObjectId } = {
+    _id: new Types.ObjectId(),
+    name: 'Test User',
+    email: 'test@example.com',
+    password: 'hashed_password',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides
+  };
+  
+  // Add necessary Document methods
+  return {
+    ...user,
+    // Minimal implementation of necessary Document methods
+    $isNew: false,
+    save: jest.fn().mockImplementation(function(this: IUser) { 
+      return Promise.resolve(this); 
+    }),
+    // Add stub implementations for other required Document methods
+    $assertPopulated: jest.fn(),
+    $clearModifiedPaths: jest.fn(),
+    $clone: jest.fn(),
+    $createModifiedPathsSnapshot: jest.fn(),
+    // Add other Document methods as needed
+  } as unknown as IUser;
+}
 
 const validUserData = {
   name: 'Test User',
@@ -9,14 +39,7 @@ const validUserData = {
   password: 'securePassword123!',
 };
 
-const mockUser: User = {
-  id: '123',
-  name: 'Test User',
-  email: 'test@example.com',
-  password: 'hashed_password',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
+const mockUser = createMockUser();
 
 const mockRepo: jest.Mocked<IUserRepository> = {
   findByEmail: jest.fn(),
@@ -68,11 +91,12 @@ describe('UserService', () => {
     it('should hash passwords before saving', async () => {
       // Arrange
       mockRepo.findByEmail.mockResolvedValue(null);
-      mockRepo.create.mockImplementation(async (user) => ({
-        ...mockUser,
-        ...user
-      }));
-
+  
+      // Create a proper mock implementation that returns an IUser-like object
+      mockRepo.create.mockImplementation(async (userData) => 
+        createMockUser(userData as UserProps)
+      );
+      
       // Act
       await service.create(validUserData);
 
@@ -98,10 +122,11 @@ describe('UserService', () => {
     it('should return user for valid credentials', async () => {
       // Arrange
       const hashedPassword = await bcrypt.hash('correctpass', 10);
-      mockRepo.findByEmail.mockResolvedValue({
-        ...mockUser,
+      const userWithHashedPassword = createMockUser({
         password: hashedPassword
       });
+      
+      mockRepo.findByEmail.mockResolvedValue(userWithHashedPassword);
 
       // Act
       const result = await service.validateUser('test@example.com', 'correctpass');
