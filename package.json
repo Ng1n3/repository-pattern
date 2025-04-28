@@ -5,11 +5,6 @@
   "main": "main.ts",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/main.ts",
-    "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create src/migrations/seedUsers",
-    "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate src/migrations/InitialSchema -d src/data-source.ts",
-    "migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
-    "migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
-    "migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts",
     "test": "NODE_ENV=test jest",
     "test:watch": "NODE_ENV=test jest --watch"
   },

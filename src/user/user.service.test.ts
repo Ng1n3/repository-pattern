@@ -16,20 +16,16 @@ export function createMockUser(overrides: Partial<UserProps> = {}): IUser {
     ...overrides
   };
   
-  // Add necessary Document methods
   return {
     ...user,
-    // Minimal implementation of necessary Document methods
     $isNew: false,
     save: jest.fn().mockImplementation(function(this: IUser) { 
       return Promise.resolve(this); 
     }),
-    // Add stub implementations for other required Document methods
     $assertPopulated: jest.fn(),
     $clearModifiedPaths: jest.fn(),
     $clone: jest.fn(),
     $createModifiedPathsSnapshot: jest.fn(),
-    // Add other Document methods as needed
   } as unknown as IUser;
 }
 

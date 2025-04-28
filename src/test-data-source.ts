@@ -4,7 +4,7 @@ dotenv.config();
 
 const TEST_DB_URI = process.env.TEST_DB_URI || 'mongodb://localhost:27017/userz-test';
 
-// Export connection functions with TypeORM-like interface for tests
+
 export const testConnectMongoDB = {
   initialize: async () => {
     await mongoose.connect(TEST_DB_URI);
